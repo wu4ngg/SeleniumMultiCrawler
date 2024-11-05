@@ -65,6 +65,8 @@ class SimpleGUI:
         self.searchQuery.pack(pady=5, padx=20, fill='x')  # Add padding and stretch to fill width
         self.search_button = tk.Button(self.root, text="search", command=self.search, font=self.button_font, bg=self.button_bg, fg=self.button_fg, bd=self.button_bd)
         self.search_button.pack(pady=5, padx=10, fill='x')  # Add padding and stretch to fill width
+        self.clear_search_button = tk.Button(self.root, text="clear search", command=self.show_res, font=self.button_font, bg=self.button_bg, fg=self.button_fg, bd=self.button_bd)
+        self.clear_search_button.pack(pady=5, padx=10, fill='x')  # Add padding and stretch to fill width
         self.dropdown_menu = tk.OptionMenu(self.root, self.dropdown_var, "Không có sản phẩm nào")
         self.dropdown_menu.config(font=self.entry_font)
         self.dropdown_menu.pack(pady=5, padx=5)  # Add padding and stretch to fill width
@@ -89,8 +91,14 @@ class SimpleGUI:
         query = self.searchQuery.get()
         selected_product = self.dropdown_var.get()
         df = self.resDf.parse(selected_product)
+        filtered_df = df[df.apply(lambda row: row.astype(str).str.contains(query, case=False).any(), axis=1)]
+        self.update_res_table(selected_product)
+        self.results_tree.delete(*self.results_tree.get_children())
+        for index, row in filtered_df.iterrows():
+            self.results_tree.insert("", "end", values=(row["prod_name"], row["prod_price"], row["prod_link"], row["fuzz_partial_ratio"], row["fuzz_ratio"]))
         print(df)
         print(f"Selected product from dropdown: {selected_product}")
+
         print(query)    
     def show_res(self):
         self.resDf = pd.ExcelFile('res.xlsx')

@@ -24,8 +24,8 @@ git clone https://github.com/wu4ngg/SeleniumMultiCrawler
 cd SeleniumMultiCrawler
 ```
 ### Bước 2: Tạo môi trường Python
-Môi trường ảo Python (virtual environment) giúp chúng ta cài đặt các dependency và thực thi code ở mức độ project, giúp việc quản lý các phiên bản python và các dependency dễ dàng hơn. Sau đây là các bước khởi tạo môi trường ảo Python:
-**Trước khi khởi tạo môi trường ảo, hãy cài đặt Python.**
+Môi trường ảo Python (virtual environment) giúp chúng ta cài đặt các dependency và thực thi code ở mức độ project, giúp việc quản lý các phiên bản python và các dependency dễ dàng hơn. Sau đây là các bước khởi tạo môi trường ảo Python:\
+**Trước khi khởi tạo môi trường ảo, hãy cài đặt Python 3.12+.**
 - Trên tất cả nền tảng
 ```
 python -m venv .venv

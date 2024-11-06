@@ -1,8 +1,9 @@
 import tkinter as tk
 from tkinter import filedialog
 import tkinter.ttk as ttk
-import main as m
+import scraper as m
 import pandas as pd
+import webbrowser
 
 class SimpleGUI:
     def __init__(self, root):
@@ -73,9 +74,8 @@ class SimpleGUI:
         # Create a frame for the results table
         self.results_frame = tk.Frame(self.root)
         self.results_frame.pack(pady=20, padx=20, fill='both', expand=True)
-
         # Define columns for the results table
-        self.results_columns = ("prod_name", "prod_price", "prod_link", "fuzz_partial_ratio", "fuzz_ratio")
+        self.results_columns = ("prod_name", "prod_price", "prod_link", "fuzz_partial_ratio", "fuzz_ratio", "provider")
 
         # Create Treeview for the results
         self.results_tree = ttk.Treeview(self.results_frame, columns=self.results_columns, show='headings')
@@ -98,7 +98,6 @@ class SimpleGUI:
             self.results_tree.insert("", "end", values=(row["prod_name"], row["prod_price"], row["prod_link"], row["fuzz_partial_ratio"], row["fuzz_ratio"]))
         print(df)
         print(f"Selected product from dropdown: {selected_product}")
-
         print(query)    
     def show_res(self):
         self.resDf = pd.ExcelFile('res.xlsx')
@@ -112,7 +111,8 @@ class SimpleGUI:
         f = self.resDf.parse(val)
         self.results_tree.delete(*self.results_tree.get_children())
         for index, row in f.iterrows():
-            self.results_tree.insert("", "end", values=(row["prod_name"], row["prod_price"], row["prod_link"], row["fuzz_partial_ratio"], row["fuzz_ratio"]))
+            self.results_tree.insert("", "end", values=(row["prod_name"], row["prod_price"], row["prod_link"], row["fuzz_partial_ratio"], row["fuzz_ratio"], row["provider"]))
+        self.results_tree.bind("<Double-1>", self.on_row_double_click)
     def open_file_dialog(self):
         self.file_path = filedialog.askopenfilename(filetypes=[("Excel files", "*.xlsx")])
         if self.file_path:
@@ -127,7 +127,14 @@ class SimpleGUI:
             # Insert new data into the treeview
             for index, row in self.df.iterrows():
                 self.tree.insert("", "end", values=(row["Barcode"], row["Tên MH"], row["ĐVT"], row["Loại sản phẩm"]))
+            
 
+    def on_row_double_click(self, event):
+        item = self.results_tree.selection()[0]
+        row_values = self.results_tree.item(item, "values")
+        tk.messagebox.showinfo("Mở link vào trang web của sản phẩm", "Hệ thống sẽ mở trình duyệt để vào đường link của sản phẩm này.")
+        webbrowser.open(row_values[2])
+        print(f"Double-clicked on row: {row_values[2]}")
     def crawl_google(self):
         crawler = m.GoogleScraper(file_path=self.file_path)
         crawler.crawl()
@@ -137,8 +144,3 @@ class SimpleGUI:
         crawler = m.LazadaScraper(file_path=self.file_path)
         crawler.crawl()
         tk.messagebox.showinfo("Crawling Complete", "The Lazada crawl has completed successfully.")
-
-if __name__ == "__main__":
-    root = tk.Tk()
-    app = SimpleGUI(root)
-    root.mainloop()

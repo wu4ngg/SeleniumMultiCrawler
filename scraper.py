@@ -113,6 +113,7 @@ class GoogleScraper:
                 with pd.ExcelWriter(f'res.xlsx', mode='w', engine='openpyxl') as writer:
                     df_prods.to_excel(writer, sheet_name=query, index=False)
             
+            
         driver.quit()
 class LazadaScraper:
     def __init__(self, file_path=None) -> None:
@@ -170,6 +171,7 @@ class LazadaScraper:
                     'prod_link': name.get_attribute('href'),
                     'fuzz_partial_ratio': fuzz.partial_ratio(query, name.text),
                     'fuzz_ratio': fuzz_ratio,
+                    'provider': 'Lazada Vietnam'
                 }
                 products.append(product)
             products.sort(key=lambda x: x['fuzz_ratio'], reverse=True)
@@ -177,4 +179,5 @@ class LazadaScraper:
             df_prods = pd.DataFrame(products)
             with pd.ExcelWriter(f'res.xlsx', mode='a', engine='openpyxl') as writer:
                 df_prods.to_excel(writer, sheet_name=query, index=False)
+            
         driver.quit()

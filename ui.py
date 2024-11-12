@@ -13,8 +13,9 @@ class SimpleGUI:
         self.root = root
         self.root.title("MultiCrawler")
         # Add an icon to the window
-        self.root.iconbitmap('icon.ico')
         self.root.state('zoomed')
+        img = tk.Image("photo", file="icon.png")
+        self.root.iconphoto(True, img)
         self.file_path = None
         self.df = None
 
@@ -102,16 +103,44 @@ class SimpleGUI:
         self.results_frame.pack(pady=20, padx=20, fill='both', expand=True)
         # Define columns for the results table
         self.results_columns = ("Tên SP", "Giá SP", "Đường Link", "Tỷ lệ khớp (approx)", "Tỷ lệ khớp (exact)", "Nhà cung cấp")
-
+        self.sort_order = {col: True for col in self.results_columns}
         # Create Treeview for the results
         self.results_tree = ttk.Treeview(self.results_frame, columns=self.results_columns, show='headings')
-
+        # Add horizontal and vertical scrollbars to the results_tree
+        self.results_tree_scroll_x = ttk.Scrollbar(self.results_frame, orient='horizontal', command=self.results_tree.xview)
+        self.results_tree_scroll_y = ttk.Scrollbar(self.results_frame, orient='vertical', command=self.results_tree.yview)
+        self.results_tree.configure(xscrollcommand=self.results_tree_scroll_x.set, yscrollcommand=self.results_tree_scroll_y.set)
+        self.results_tree_scroll_x.pack(side='bottom', fill='x')
+        self.results_tree_scroll_y.pack(side='right', fill='y')
+        # Register a click event for the columns
+        for col in self.results_columns:
+            self.results_tree.heading(col, text=col, command=lambda _col=col: self.on_column_click(_col))
         # Define headings for the results table
         for col in self.results_columns:
             self.results_tree.heading(col, text=col)
 
         # Add Treeview to the results frame
         self.results_tree.pack(fill='both', expand=True)
+    def on_column_click(self, col):
+        # Add arrows to columns when clicked
+        self.sort_order[col] = not self.sort_order[col]
+        for _col in self.results_columns:
+            if self.sort_order[col] and col == _col:
+                self.results_tree.heading(col, text=f"{col} ↓")
+            elif col == _col:
+                self.results_tree.heading(col, text=f"{col} ↑")
+            else:
+                self.results_tree.heading(_col, text=_col)
+        # Get all rows from the treeview
+        rows = [(self.results_tree.set(item, col), item) for item in self.results_tree.get_children('')]
+        # Sort the rows based on the selected column
+        if col == "Giá SP":
+            rows.sort(key=lambda x: float(x[0].replace('₫', '').replace(',', '')), reverse=self.sort_order[col])
+        else:
+            rows.sort(reverse=self.sort_order[col])  # Change to True for descending order
+        # Rearrange the rows in the treeview
+        for index, (value, item) in enumerate(rows):
+            self.results_tree.move(item, '', index)
     def delete_file(self):
         if tk.messagebox.askyesno("Xóa file excel kết quả", "Bạn có muốn xóa file kết quả crawl excel?"):
             try:
@@ -142,6 +171,8 @@ class SimpleGUI:
     def update_res_table(self, val):
         f = self.resDf.parse(val)
         self.results_tree.delete(*self.results_tree.get_children())
+        for col in self.columns:
+            self.tree.heading(col, text=col)
         for index, row in f.iterrows():
             self.results_tree.insert("", "end", values=(row["prod_name"], "{:,.0f}₫".format(row["prod_price"]), row["prod_link"], row["fuzz_partial_ratio"], row["fuzz_ratio"], row["provider"]))
         self.results_tree.bind("<Double-1>", self.on_row_double_click)
@@ -179,9 +210,9 @@ class SimpleGUI:
     def crawl_google(self):
         crawler = m.GoogleScraper(file_path=self.file_path)
         crawler.crawl()
-        tk.messagebox.showinfo("Crawling Complete", "The Google crawl has completed successfully.")
+        tk.messagebox.showinfo("Đã hoàn thành quá trình crawl.", "Crawl sản phẩm từ google thành công.")
         self.show_res()
     def crawl_lazada(self):
         crawler = m.LazadaScraper(file_path=self.file_path)
         crawler.crawl()
-        tk.messagebox.showinfo("Crawling Complete", "The Lazada crawl has completed successfully.")
+        tk.messagebox.showinfo("Đã hoàn thành quá trình crawl.", "Crawl sản phẩm từ lazada thành công.")
